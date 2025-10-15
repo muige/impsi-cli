@@ -17,7 +17,14 @@ import (
 var gap = "\n\n"
 
 var conversions = []conversionPair{
-	{"Length", "ft", "m", convert.FtToM, convert.MToFt},
+	{"Distance", "Miles", "km", convert.MilesToKm, convert.KmToMiles},
+	{"Distance", "ft", "m", convert.FtToM, convert.MToFt},
+	{"Distance (Yards)", "yd", "m", convert.YdToM, convert.MToYd},
+	{"Length", "in", "cm", convert.InToCm, convert.CmToIn},
+	{"Mass", "lbs", "kg", convert.LbsToKg, convert.KgToLbs},
+	{"Weight", "oz", "g", convert.OzToG, convert.GToOz},
+	{"Volume (Gallons)", "Gal", "l", convert.GalToL, convert.LToGal},
+	{"Volume fluid (Ounces)", "fl oz", "ml", convert.FlOzToMl, convert.MlToFlOz},
 }
 
 type model struct {
@@ -114,6 +121,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	var val float64 = 0
 	// Header
 	s := "Converting SI <-> Imperial\n\n"
 	s += fmt.Sprintf("%s Insert a number: %s\n%s",
@@ -121,7 +129,7 @@ func (m model) View() string {
 		m.textInput.View(),
 		gap)
 	val, err := strconv.ParseFloat(m.textInput.Value(), 64)
-	if err != nil {
+	if err != nil && val != 0 {
 		s += "Cannot convert input value to a floating point number"
 	} else {
 		for _, conv := range conversions {

@@ -24,7 +24,7 @@ func MilesToKm(x float64) float64 {
 }
 
 func KmToMiles(x float64) float64 {
-	return x
+	return x / 1.60934
 }
 
 func InToCm(x float64) float64 {

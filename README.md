@@ -14,7 +14,11 @@ go build
 ./impsi-cli
 ```
 
-Enter a number to see conversions between feet and meters.
+Enter a number to see real-time conversions including:
+- Distance: miles, feet, inches, yards ↔ km, meters, cm
+- Weight: pounds, ounces ↔ kg, grams
+- Volume: gallons, fl oz ↔ liters, mL
+
 Press Ctrl-C or Esc to quit.
 
 ## Development

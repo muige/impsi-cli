@@ -35,3 +35,19 @@ func TestIsAllowedRunes(t *testing.T) {
 		})
 	}
 }
+
+func TestInitialModel(t *testing.T) {
+	m := initialModel()
+
+	if m.err != nil {
+		t.Errorf("initialModel() error should be nil, got %v", m.err)
+	}
+
+	if m.textInput.CharLimit != 100 {
+		t.Errorf("textInput.CharLimit = %d; want 100", m.textInput.CharLimit)
+	}
+
+	if m.textInput.Width != 20 {
+		t.Errorf("textInput.Width = %d; want 20", m.textInput.Width)
+	}
+}

@@ -376,3 +376,51 @@ func TestMlToFlOz(t *testing.T) {
 		})
 	}
 }
+
+func TestFToC(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    float64
+		expected float64
+	}{
+		{"freezing point", 32.0, 0.0},
+		{"boiling point", 212.0, 100.0},
+		{"body temperature", 98.6, 37.0},
+		{"zero fahrenheit", 0.0, -17.777778},
+		{"negative", -40.0, -40.0},
+		{"room temperature", 68.0, 20.0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := FToC(tt.input)
+			if math.Abs(result-tt.expected) > 0.0001 {
+				t.Errorf("FToC(%f) = %f; want %f", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestCToF(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    float64
+		expected float64
+	}{
+		{"freezing point", 0.0, 32.0},
+		{"boiling point", 100.0, 212.0},
+		{"body temperature", 37.0, 98.6},
+		{"negative celsius", -17.777778, 0.0},
+		{"negative equal", -40.0, -40.0},
+		{"room temperature", 20.0, 68.0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := CToF(tt.input)
+			if math.Abs(result-tt.expected) > 0.0001 {
+				t.Errorf("CToF(%f) = %f; want %f", tt.input, result, tt.expected)
+			}
+		})
+	}
+}

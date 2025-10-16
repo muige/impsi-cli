@@ -10,22 +10,12 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	libgloss "github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 
 	convert "github.com/muige/impsi/conversions"
 )
 
 var gap = "\n\n"
-
-var conversions = []conversionPair{
-	{"Distance", "Miles", "km", convert.MilesToKm, convert.KmToMiles},
-	{"Distance", "ft", "m", convert.FtToM, convert.MToFt},
-	{"Distance (Yards)", "yd", "m", convert.YdToM, convert.MToYd},
-	{"Length", "in", "cm", convert.InToCm, convert.CmToIn},
-	{"Mass", "lbs", "kg", convert.LbsToKg, convert.KgToLbs},
-	{"Weight", "oz", "g", convert.OzToG, convert.GToOz},
-	{"Volume (Gallons)", "Gal", "l", convert.GalToL, convert.LToGal},
-	{"Volume fluid (Ounces)", "fl oz", "ml", convert.FlOzToMl, convert.MlToFlOz},
-}
 
 type model struct {
 	// input   string
@@ -34,21 +24,8 @@ type model struct {
 	err       error
 }
 
-type conversionPair struct {
-	// name to show
-	name string
-	// string: from which unit
-	from string
-	// string: to which unit
-	to string
-	// fucntion to convert from -> to
-	fwdfunc func(float64) float64
-	// function to convert to -> from
-	backfunc func(float64) float64
-}
-
-// Function checks that input contains only allowed characters (Runes in bubbletea)
-// The allowed characters are: integers form 0 to 9, '-' if as the first char and one decimal dot.
+// Function checks that input contains only allowed runes
+// The allowed runes are: integers form 0 to 9, '-' if as the first char and one decimal dot.
 func isAllowedRunes(runes []rune, current string) bool {
 	dotSeen := false
 	for _, c := range current {
@@ -121,24 +98,58 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	var val float64 = 0
-	// Header
-	s := "Converting SI <-> Imperial\n\n"
-	s += fmt.Sprintf("%s Insert a number: %s\n%s",
+	// Styles TODO: More styles with adaptive colors
+	headerStyle := libgloss.NewStyle().Bold(true).Foreground(libgloss.AdaptiveColor{Light: "0", Dark: "12"})
+	footerStyle := libgloss.NewStyle().Bold(true).Foreground(libgloss.AdaptiveColor{Light: "0", Dark: "12"})
+	cellStyle := libgloss.NewStyle().Padding(0, 2)
+	// borderStyle := libgloss.NewStyle().Border(libgloss.NormalBorder())
+	// columnHeaderStyle := libgloss.NewStyle().Bold(true).Underline(true).Foreground(libgloss.AdaptiveColor{Light: "0", Dark: "12"})
+
+	s := headerStyle.Render("Converting SI <-> Imperial\n")
+	s += fmt.Sprintf("\n%s Insert a number: %s\n%s",
 		m.spinner.View(),
 		m.textInput.View(),
 		gap)
-	val, err := strconv.ParseFloat(m.textInput.Value(), 64)
-	if err != nil && val != 0 {
-		s += "Cannot convert input value to a floating point number"
-	} else {
-		for _, conv := range conversions {
-			s += fmt.Sprintf("%s\n", conv.name)
-			s += fmt.Sprintf("%.2f %s = %.2f %s\n", val, conv.from, conv.fwdfunc(val), conv.to)
-			s += fmt.Sprintf("%.2f %s = %.2f %s\n", val, conv.to, conv.backfunc(val), conv.from)
-		}
+	var val float64 = 0
+	val, _ = strconv.ParseFloat(m.textInput.Value(), 64)
+	// Create the tables
+	impToSIRows := [][]string{
+		{"Distance", "mi -> km", fmt.Sprintf("%.2f", convert.MilesToKm(val))},
+		{"", "ft -> m", fmt.Sprintf("%.2f", convert.FtToM(val))},
+		{"", "yd -> m", fmt.Sprintf("%.2f", convert.YdToM(val))},
+		{"", "in -> cm", fmt.Sprintf("%.2f", convert.InToCm(val))},
+		{"Weight", "lbs -> kg", fmt.Sprintf("%.2f", convert.LbsToKg(val))},
+		{"", "oz -> g", fmt.Sprintf("%.2f", convert.OzToG(val))},
+		{"Volume", "Gal -> l", fmt.Sprintf("%.2f", convert.GalToL(val))},
+		{"", "fl oz -> ml", fmt.Sprintf("%.2f", convert.FlOzToMl(val))},
+		{"Temperature", "F -> C", fmt.Sprintf("%.2f", convert.FToC(val))},
 	}
-	s += "\nPress ctrl-c or Esc to quit.\n"
+	siToImpRows := [][]string{
+		{"Distance", "km -> mi", fmt.Sprintf("%.2f", convert.KmToMiles(val))},
+		{"", "m -> ft", fmt.Sprintf("%.2f", convert.MToFt(val))},
+		{"", "m -> yd", fmt.Sprintf("%.2f", convert.MToYd(val))},
+		{"", "cm -> in", fmt.Sprintf("%.2f", convert.CmToIn(val))},
+		{"Weight", "kg -> lbs", fmt.Sprintf("%.2f", convert.KgToLbs(val))},
+		{"", "g -> oz", fmt.Sprintf("%.2f", convert.GToOz(val))},
+		{"Volume", "l -> Gal", fmt.Sprintf("%.2f", convert.LToGal(val))},
+		{"", "ml -> fl oz", fmt.Sprintf("%.2f", convert.MlToFlOz(val))},
+		{"Temperature", "C -> F", fmt.Sprintf("%.2f", convert.CToF(val))},
+	}
+	// TODO: Make the tables prettier and use adaptive colors
+	impToSIRowsTable := table.New().
+		Border(libgloss.NormalBorder()).
+		StyleFunc(func(row, col int) libgloss.Style { return cellStyle }).
+		Rows(impToSIRows...)
+	siToImpRowsTable := table.New().
+		Border(libgloss.NormalBorder()).
+		StyleFunc(func(row, col int) libgloss.Style { return cellStyle }).
+		Rows(siToImpRows...)
+	// Use libgloss to join the tables side by side
+	tables := libgloss.JoinHorizontal(libgloss.Top, impToSIRowsTable.Render(), "    ", siToImpRowsTable.Render())
+	s += tables
+
+	// Render the tables and add them to s
+	s += footerStyle.Render("\nPress ctrl-c or Esc to quit.\n")
 	return s
 }
 

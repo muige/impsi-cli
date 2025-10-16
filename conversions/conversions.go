@@ -70,3 +70,13 @@ func FlOzToMl(x float64) float64 {
 func MlToFlOz(x float64) float64 {
 	return x / 29.5735
 }
+
+// Temperature conversions
+
+func FToC(x float64) float64 {
+	return (x - 32) * 5 / 9
+}
+
+func CToF(x float64) float64 {
+	return (x * 9 / 5) + 32
+}
